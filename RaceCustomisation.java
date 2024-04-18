@@ -2,10 +2,15 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.concurrent.TimeUnit;
+
+//import Horse;
+//import Race;
 
 public class RaceCustomisation {
     private static int totalRaces = 0; // Track total number of races
     private static int coins = 100; // Initial number of coins
+    private static JTextArea raceProgressTextArea; // TextArea to display race progress
 
     public static void main(String[] args) {
         // Create a frame
@@ -66,8 +71,26 @@ public class RaceCustomisation {
             @Override
             public void actionPerformed(ActionEvent e) {
                 totalRaces++; // Increment total number of races
-                // Implement race start logic here
-                System.out.println("Race Started");
+                // Start the race
+                Race race = new Race(trackLengthSlider.getValue()); // Pass track length from GUI
+                // Add horses to the race (assuming horse details are entered in the GUI)
+                race.addHorse(new Horse('H', "Horse 1", 0.4), 1);
+                race.addHorse(new Horse('H', "Horse 2", 0.4), 2);
+                race.addHorse(new Horse('H', "Horse 3", 0.4), 3);
+
+                // Get the race progress string
+                String raceProgress = race.generateRaceProgress();
+
+                // Update the race progress TextArea
+                raceProgressTextArea.setText(raceProgress);
+
+                // Start the race progress update in a separate thread
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        race.startRace(raceProgressTextArea);
+                    }
+                }).start();
             }
         });
         // Create a panel for the button and center-align it
@@ -168,6 +191,13 @@ public class RaceCustomisation {
             }
         });
 
+        // Create a JTextArea for displaying race progress
+        raceProgressTextArea = new JTextArea();
+        raceProgressTextArea.setEditable(false); // Make it read-only
+        JScrollPane scrollPane = new JScrollPane(raceProgressTextArea);
+        scrollPane.setPreferredSize(new Dimension(300, 200)); // Set preferred size
+        bottomPanel.add(scrollPane); // Add it to the bottom panel
+
         // Add panels to the frame
         Container contentPane = frame.getContentPane();
         contentPane.setLayout(new BorderLayout());
@@ -212,4 +242,3 @@ public class RaceCustomisation {
         return panel;
     }
 }
-
