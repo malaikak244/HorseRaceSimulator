@@ -21,6 +21,7 @@ public class Horse {
         this.horseSymbol = horseSymbol;
         this.horseName = horseName;
         this.horseConfidence = horseConfidence;
+        this.fallenHorse = false;
 
     }
 

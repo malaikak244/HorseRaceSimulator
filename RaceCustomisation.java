@@ -4,22 +4,31 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import java.util.HashMap;
+import java.util.Map;
 
 public class RaceCustomisation {
-    private static int totalRaces = 0; // Track total num of races
-    private static int coins = 100; // Initial num of coins
-    private static JTextArea raceProgressTextArea; // TextArea displays race progress
-    private static boolean raceStarted = false;
+    private static int totalRaces = 0;
+    private static int coins = 100;
+    private static JTextArea raceProgressTextArea;
     private static JPanel horseDetailsPanel;
     private static JPanel rightPanel;
     private static JLabel[] horseWinsLabels;
     private static JLabel totalRacesLabel;
-    private static JButton[] betButtons; // Array to store bet buttons
+    private static JButton[] betButtons;
+    private static int[] horseWins;
+    private static int numTracks;
+    private static JLabel coinsLabel;
+    private static Betting bettingSystem;
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("Race Customisation");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(600, 400);
+
+        // Initialize coinsLabel
+        coinsLabel = new JLabel("Coins: " + coins);
+        frame.add(coinsLabel, BorderLayout.SOUTH);
 
         Color leftRightColor = Color.lightGray;
         Color centerColor = Color.gray;
@@ -48,12 +57,14 @@ public class RaceCustomisation {
         trackCustomizationPanel.setLayout(new BoxLayout(trackCustomizationPanel, BoxLayout.Y_AXIS));
         leftPanel.add(trackCustomizationPanel);
 
+        bettingSystem = new Betting(coins, coinsLabel, frame);
+
         numOfTracksSlider.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
-                int numTracks = numOfTracksSlider.getValue();
+                numTracks = numOfTracksSlider.getValue();
                 updateHorseCustomization(numTracks);
-                updateBetButtons(numTracks);
+                updateBetButtons(numTracks, coinsLabel, frame);
             }
         });
 
@@ -84,38 +95,15 @@ public class RaceCustomisation {
             @Override
             public void actionPerformed(ActionEvent e) {
                 totalRaces++;
-                raceStarted = true;
+                totalRacesLabel.setText("Total races: " + totalRaces);
                 numOfTracksSlider.setEnabled(false);
-                int numTracks = numOfTracksSlider.getValue();
                 Race race = new Race(trackLengthSlider.getValue());
 
-                switch (numTracks) {
-                    case 2:
-                        race.addHorse(new Horse('H', "Horse 1", 0.4));
-                        race.addHorse(new Horse('H', "Horse 2", 0.4));
-                        break;
-                    case 3:
-                        race.addHorse(new Horse('H', "Horse 1", 0.4));
-                        race.addHorse(new Horse('H', "Horse 2", 0.4));
-                        race.addHorse(new Horse('H', "Horse 3", 0.4));
-                        break;
-                    case 4:
-                        race.addHorse(new Horse('H', "Horse 1", 0.4));
-                        race.addHorse(new Horse('H', "Horse 2", 0.4));
-                        race.addHorse(new Horse('H', "Horse 3", 0.4));
-                        race.addHorse(new Horse('H', "Horse 4", 0.4));
-                        break;
-                    case 5:
-                        race.addHorse(new Horse('H', "Horse 1", 0.4));
-                        race.addHorse(new Horse('H', "Horse 2", 0.4));
-                        race.addHorse(new Horse('H', "Horse 3", 0.4));
-                        race.addHorse(new Horse('H', "Horse 4", 0.4));
-                        race.addHorse(new Horse('H', "Horse 5", 0.4));
-                        break;
-                    default:
-                        race.addHorse(new Horse('H', "Horse 1", 0.4));
-                        race.addHorse(new Horse('H', "Horse 2", 0.4));
-                        break;
+                for (int i = 1; i <= numTracks; i++) {
+                    JPanel horsePanel = (JPanel) horseDetailsPanel.getComponent(i - 1);
+                    JTextField nameField = (JTextField) horsePanel.getComponent(1);
+                    String horseName = nameField.getText();
+                    race.addHorse(new Horse('H', horseName, 0.4));
                 }
 
                 String raceProgress = race.generateRaceProgress();
@@ -126,6 +114,15 @@ public class RaceCustomisation {
                     @Override
                     public void run() {
                         race.startRace(raceProgressTextArea);
+                        int winnerIndex = race.getWinnerIndex();
+                        if (winnerIndex != -1) {
+                            SwingUtilities.invokeLater(new Runnable() {
+                                @Override
+                                public void run() {
+                                    updateHorseWins(winnerIndex);
+                                }
+                            });
+                        }
                     }
                 }).start();
             }
@@ -141,12 +138,6 @@ public class RaceCustomisation {
         centerPanel.add(topPanel);
 
         horseDetailsPanel = new JPanel(new GridLayout(1, 3));
-        JPanel horse1Panel = createHorsePanel("Horse 1");
-        JPanel horse2Panel = createHorsePanel("Horse 2");
-        JPanel horse3Panel = createHorsePanel("Horse 3");
-        horseDetailsPanel.add(horse1Panel);
-        horseDetailsPanel.add(horse2Panel);
-        horseDetailsPanel.add(horse3Panel);
         centerPanel.add(horseDetailsPanel);
 
         rightPanel = new JPanel();
@@ -154,8 +145,10 @@ public class RaceCustomisation {
         rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.Y_AXIS));
         JLabel topRightLabel = new JLabel("Statistics", SwingConstants.CENTER);
         rightPanel.add(topRightLabel);
-        horseWinsLabels = new JLabel[3];
-        for (int i = 0; i < horseWinsLabels.length; i++) {
+        System.out.println(numTracks);
+
+        horseWinsLabels = new JLabel[numTracks];
+        for (int i = 0; i < numTracks; i++) {
             horseWinsLabels[i] = new JLabel("Horse " + (i + 1) + " Wins: 0");
             rightPanel.add(horseWinsLabels[i]);
         }
@@ -167,28 +160,13 @@ public class RaceCustomisation {
         bottomPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
         JLabel bettingLabel = new JLabel("Betting System", SwingConstants.CENTER);
         bottomPanel.add(bettingLabel);
-        betButtons = new JButton[3]; // Initialize bet buttons array with maximum size
-        for (int i = 0; i < betButtons.length; i++) {
-            betButtons[i] = new JButton("Bet on Horse " + (i + 1));
-            int index = i; // Store current index for ActionListener
-            betButtons[i].addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    if (coins >= 10) {
-                        coins -= 10;
-                        coinsLabel.setText("Coins: " + coins);
-                        System.out.println("Bet on Horse " + (index + 1) + " placed");
-                    } else {
-                        JOptionPane.showMessageDialog(frame, "Not enough coins to place a bet.", "Insufficient Coins", JOptionPane.WARNING_MESSAGE);
-                    }
-                }
-            });
-            bottomPanel.add(betButtons[i]);
-        }
+        betButtons = new JButton[0];
+
         JButton viewOddsButton = new JButton("View Odds");
         bottomPanel.add(viewOddsButton);
-        JLabel coinsLabel = new JLabel("Coins: " + coins);
+
         bottomPanel.add(coinsLabel);
+
         raceProgressTextArea = new JTextArea();
         raceProgressTextArea.setEditable(false);
         JScrollPane scrollPane = new JScrollPane(raceProgressTextArea);
@@ -231,43 +209,75 @@ public class RaceCustomisation {
 
     private static void updateHorseCustomization(int numTracks) {
         horseDetailsPanel.removeAll();
-        for (int i = 1; i <= numTracks; i++) {
-            JPanel horsePanel = createHorsePanel("Horse " + i);
+        horseWinsLabels = new JLabel[numTracks];
+        for (int i = 0; i < numTracks; i++) {
+            JPanel horsePanel = createHorsePanel("Horse " + (i + 1));
+            JTextField nameField = (JTextField) horsePanel.getComponent(1);
+            String horseName = nameField.getText().trim();
+            if (!horseName.isEmpty()) {
+                horseWinsLabels[i] = new JLabel(horseName + " Wins: 0");
+            } else {
+                horseWinsLabels[i] = new JLabel("Horse " + (i + 1) + " Wins: 0");
+            }
             horseDetailsPanel.add(horsePanel);
         }
+        updateRightPanel();
         horseDetailsPanel.revalidate();
         horseDetailsPanel.repaint();
-        updateBetButtons(numTracks); // Update bet buttons based on the number of tracks
     }
 
-    private static void updateBetButtons(int numTracks) {
-        // Remove all existing bet buttons
+    private static void updateRightPanel() {
+        rightPanel.removeAll();
+        rightPanel.add(new JLabel("Statistics", SwingConstants.CENTER));
+        for (JLabel label : horseWinsLabels) {
+            rightPanel.add(label); 
+        }
+        rightPanel.add(totalRacesLabel);
+        rightPanel.revalidate();
+        rightPanel.repaint();
+    }
+
+    private static void updateHorseWins(int horseIndex) {
+        if (horseWins == null || horseIndex >= horseWins.length) {
+            return;
+        }
+        horseWins[horseIndex]++;
+        if (horseIndex < horseWinsLabels.length) {
+            horseWinsLabels[horseIndex].setText("Horse " + (horseIndex + 1) + " Wins: " + horseWins[horseIndex]);
+        }
+    }
+
+    private static void updateBetButtons(int numTracks, JLabel coinsLabel, JFrame frame) {
+        if (horseWins == null || horseWins.length != numTracks) {
+            horseWins = new int[numTracks];
+            for (int i = 0; i < numTracks; i++) {
+                horseWins[i] = 0;
+            }
+        }
+    
         for (int i = 0; i < betButtons.length; i++) {
             if (betButtons[i] != null) {
                 betButtons[i].setVisible(false);
-                rightPanel.remove(betButtons[i]);
             }
         }
-        // Create new bet buttons based on the number of tracks
+    
         betButtons = new JButton[numTracks];
         for (int i = 0; i < numTracks; i++) {
+            final int horseIndex = i+1;
             betButtons[i] = new JButton("Bet on Horse " + (i + 1));
-            int index = i;
             betButtons[i].addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    if (coins >= 10) {
-                        coins -= 10;
-                        coinsLabel.setText("Coins: " + coins);
-                        System.out.println("Bet on Horse " + (index + 1) + " placed");
-                    } else {
-                        JOptionPane.showMessageDialog(frame, "Not enough coins to place a bet.", "Insufficient Coins", JOptionPane.WARNING_MESSAGE);
-                    }
+                    placeBet(horseIndex, coinsLabel);
                 }
             });
             rightPanel.add(betButtons[i]);
         }
         rightPanel.revalidate();
         rightPanel.repaint();
+    }
+
+    private static void placeBet(int numTracks, JLabel coinsLabel) {
+        bettingSystem.placeBet(numTracks);
     }
 }

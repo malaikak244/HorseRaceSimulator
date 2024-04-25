@@ -9,21 +9,11 @@ public class Race {
     private int raceLength;
     private List<Horse> horses;
 
-    // Constructor definition in the Race class
     public Race(int distance) {
         raceLength = distance;
         horses = new ArrayList<>();
     }
 
-
-
-    // public void addHorse(Horse theHorse, int laneNumber) {
-    //     if (laneNumber >= 1 && laneNumber <= horses.length) {
-    //         horses[laneNumber - 1] = theHorse;
-    //     } else {
-    //         System.out.println("Cannot add horse to lane " + laneNumber + " because there is no such lane");
-    //     }
-    // }
 
     public void addHorse(Horse theHorse) {
         horses.add(theHorse);
@@ -218,4 +208,18 @@ public class Race {
             }
         }
     }
+
+    public int getWinnerIndex() {
+        for (int i = 0; i < horses.size(); i++) {
+            Horse horse = horses.get(i);
+            if (horse != null && raceWonBy(horse)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+    
+
+    
+    
 }
