@@ -1,3 +1,10 @@
+/**
+ * The Race class is responsible for printing/ showing the race
+ *
+ * @Malaika Khan
+ * @25/04/2024
+ */
+
 import java.util.concurrent.TimeUnit;
 import java.lang.Math;
 import javax.swing.JTextArea;
@@ -6,19 +13,22 @@ import java.util.List;
 
 
 public class Race {
+    // Fields
     private int raceLength;
     private List<Horse> horses;
 
+    // Constructor
     public Race(int distance) {
         raceLength = distance;
         horses = new ArrayList<>();
     }
 
-
+    // Adds horses
     public void addHorse(Horse theHorse) {
         horses.add(theHorse);
     }
 
+    // Starts the race
     public void startRace(JTextArea raceProgressTextArea) {
         boolean finished = false;
 
@@ -67,6 +77,7 @@ public class Race {
         winningHorse();
     }
 
+    // Moves the horse
     private void moveHorse(Horse theHorse) {
         if (!theHorse.hasFallen()) {
             adjustConfidence(theHorse);
@@ -89,6 +100,7 @@ public class Race {
         }
     }
 
+    // Changes the confidence of the horse
     public void adjustConfidence(Horse theHorse) {
         if (theHorse.hasFallen()) {
             double newConfidence = Math.floor(theHorse.getConfidence() * 0.9 * 100) / 100;
@@ -108,6 +120,7 @@ public class Race {
         }
     }
 
+    // Finds out whether any of the horses have won or not
     private boolean anyHorseWon() {
         for (Horse horse : horses) {
             if (horse != null && raceWonBy(horse)) {
@@ -117,10 +130,12 @@ public class Race {
         return false;
     }
 
+    // Return true if the horse object passed as a parameter is the winning horse
     private boolean raceWonBy(Horse theHorse) {
         return theHorse.getDistanceTravelled() == raceLength;
     }
 
+    // Shows the race progress
     public String generateRaceProgress() {
         StringBuilder raceProgress = new StringBuilder();
         raceProgress.append("Race Progress:\n");
@@ -135,6 +150,7 @@ public class Race {
         return raceProgress.toString();
     }
     
+    // Shows the lane progress
     private String generateLaneProgress(Horse horse) {
         StringBuilder laneProgress = new StringBuilder();
 
@@ -157,6 +173,7 @@ public class Race {
         return laneProgress.toString();
     }
 
+    // Prints the race
     private void printRace() {
         System.out.print('\u000C');
         multiplePrint('=', raceLength + 3);
@@ -173,6 +190,7 @@ public class Race {
         System.out.println();
     }
 
+    // Prints lanes
     private void printLane(Horse theHorse) {
         int spacesBefore = theHorse.getDistanceTravelled();
         int spacesAfter = raceLength - theHorse.getDistanceTravelled();
@@ -195,12 +213,14 @@ public class Race {
         System.out.print(theHorse.getName() + ": (Confidence: " + theHorse.getConfidence() + ")");
     }
 
+    // Prints each of the characters representing the horses
     private void multiplePrint(char aChar, int times) {
         for (int i = 0; i < times; i++) {
             System.out.print(aChar);
         }
     }
 
+    // Outputs the winner
     private void winningHorse() {
         for (Horse horse : horses) {
             if (horse != null && raceWonBy(horse)) {
@@ -209,6 +229,7 @@ public class Race {
         }
     }
 
+    // Returns the index of the winning horse in the list
     public int getWinnerIndex() {
         for (int i = 0; i < horses.size(); i++) {
             Horse horse = horses.get(i);
@@ -218,6 +239,22 @@ public class Race {
         }
         return -1;
     }
+
+    // Getter
+    public int getLength() {
+        return raceLength;
+    }
+    
+    // Getter
+    public String getWinner() {
+        int winnerIndex = getWinnerIndex();
+        if (winnerIndex != -1) {
+            Horse winningHorse = horses.get(winnerIndex);
+            return winningHorse.getName();
+        }
+        return "No winner";
+    }
+    
     
 
     

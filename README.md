@@ -5,6 +5,9 @@ This Horse Race Simulator project simulates a horse race. It provides a GUI whic
 
 Installation + how to run:
 - Download all of the Java files
-- If using an IDE, run and a GUI should open up
-- If using the CLI, place all java files in the desired directory. Then open CLI and navigate to that directory, then run "javac *.java"
+- Place these files in a new folder
+- Using the Command Line Interface, navigate to the directory containing the files
+- Use the following command to compile the files: javac *.java
+- Then use "java RaceCustomisation.java"
+Note: a JFrame will appear in which you can customise the race and the horses although you need to move the slider representing the number of horses in order for some of the panels to appear.
 
